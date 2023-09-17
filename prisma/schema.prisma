@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  username    String       @unique
+  email       String       @unique 
+  password    String
+  desc        String?
+  score       Int          @default(0)
+  refresh     String?
+  refreshExp  DateTime?
+  isHelper    Boolean      @default(false)
+  isAdmin     Boolean      @default(false)
+
+  questLog    QuestLog[]
+  solved      UserSolved[]
+  chatRoom    ChatUser[]
+  chats       Chat[]
+
+  @@index([id, email])
+}
+
+model Quest {
+ id           Int         @id @default(autoincrement())
+ title        String
+ createdAt    DateTime
+ status       String
+ type         String
+ thumbnail    String?
+ difficulty   Int
+ hashtag      Json
+ contents     String
+ commentary   String?
+ answer       String
+
+ categoryId   Int
+ category     QuestCategory @relation(fields: [categoryId], references: [id])
+
+ solvedUser   UserSolved[]
+ questLog     QuestLog[]
+
+ @@index([title, contents, type])
+ @@index([categoryId])
+}
+
+model QuestCategory {
+  id          Int          @id @default(autoincrement())
+  title       String
+  thumbnail   String
+  desc        String
+  grade       Int
+  
+  quests      Quest[]
+}
+
+model UserSolved {
+ id           Int          @id @default(autoincrement())
+ userId       Int         
+ user         User?        @relation(fields: [userId], references: [id])
+ questId      Int         
+ quest        Quest?       @relation(fields: [questId], references: [id])
+
+ @@index([userId,questId]) 
+ @@index([questId])
+}
+
+model QuestLog {
+ id           Int         @id @default(autoincrement())
+ userId       Int         
+ questId      Int         
+ user         User?        @relation(fields: [userId], references: [id])
+ quest        Quest?       @relation(fields: [questId], references: [id])
+
+ @@index([userId,questId]) 
+ @@index([questId])
+}
+
+model Chatroom {
+ id           Int          @id @default(autoincrement())
+ title        String       
+
+ user         ChatUser[]   
+ chat         Chat[]       
+  
+}
+
+model ChatUser {
+ id            Int         @id @default(autoincrement())
+ userId        Int          
+ user          User?       @relation(fields: [userId], references: [id])
+ chatroomId    Int           
+ chatroom      Chatroom?   @relation(fields: [chatroomId], references: [id])
+
+ @@index([userId,chatroomId])  
+ @@index([chatroomId])
+}
+
+
+model Chat{
+ id            Int         @id() @default(autoincrement()) 
+ userId        Int           
+ user          User?       @relation(fields: [userId], references: [id])
+ chatroomId    Int            
+ chatroom      Chatroom?   @relation(fields: [chatroomId], references: [id])
+
+ @@index([userId,chatroomId])
+ @@index([chatroomId])
+}
